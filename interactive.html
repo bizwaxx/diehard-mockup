@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RCS — The Check Screen (interactive)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#242832; --ink:#e8ebf0;
+    --mut:#8b929f; --green:#1f9d55; --greenbg:#12251a; --red:#e0533d; --redbg:#2a1512;
+    --amber:#d9a441; --amberbg:#2a2312; --blue:#3d7be0;
+  }
+  *{box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px}
+  header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--panel)}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  header .wk{color:var(--mut);font-size:13px;margin-left:10px;font-weight:400}
+  .badge{font-size:11px;color:var(--mut)}
+  .bar{display:flex;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:120px}
+  .stat .n{font-size:22px;font-weight:700}
+  .stat .l{color:var(--mut);font-size:12px;margin-top:2px}
+  .stat.green .n{color:var(--green)} .stat.red .n{color:var(--red)}
+  .filters{margin-left:auto;display:flex;gap:8px}
+  .btn{background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+  .btn.active{border-color:var(--blue);color:#cfe0ff}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+  .btn.primary:disabled{opacity:.4;cursor:not-allowed}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  tr.green{background:var(--greenbg)} tr.red{background:var(--redbg)}
+  tr.hidden{display:none}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .dot.g{background:var(--green)} .dot.r{background:var(--red)}
+  .flag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--redbg);color:var(--red);border:1px solid #4a2018;margin-left:2px}
+  .flag.amber{background:var(--amberbg);color:var(--amber);border-color:#4a3d18}
+  .money{font-variant-numeric:tabular-nums}
+  .fix{background:var(--blue);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+  .ok{color:var(--mut);font-size:12px}
+  .foot{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);background:var(--panel);position:sticky;bottom:0}
+  .foot .note{color:var(--mut);font-size:13px;max-width:58%}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;width:420px;max-width:92vw}
+  .modal h3{margin:0 0 6px;font-size:16px}
+  .modal p{color:var(--mut);margin:0 0 16px;font-size:13px}
+  .choice{display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:9px;cursor:pointer;margin-bottom:9px;font-size:14px}
+  .choice:hover{border-color:var(--blue)}
+  .modal .cancel{background:none;border:none;color:var(--mut);cursor:pointer;font-size:13px;margin-top:4px}
+  .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;opacity:0;transition:.3s;z-index:60}
+  .toast.show{opacity:1}
+  .done-banner{display:none;background:var(--greenbg);border:1px solid var(--green);color:#7fe0a6;padding:12px 18px;border-radius:10px;margin:14px 22px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>RCS Tickets <span class="wk">Week 15 · 2026</span></h1></div>
+  <div class="badge">Interactive concept · real Week 15 sample · click the blue buttons</div>
+</header>
+
+<div class="bar">
+  <div class="stat"><div class="n">247</div><div class="l">tickets captured</div></div>
+  <div class="stat green"><div class="n" id="greenCount">239</div><div class="l">🟢 clear — no action</div></div>
+  <div class="stat red"><div class="n" id="redCount">8</div><div class="l">🔴 need a check</div></div>
+  <div class="stat"><div class="n money">$22,140</div><div class="l">week spread (profit)</div></div>
+  <div class="filters">
+    <button class="btn active" id="fReds" onclick="setFilter('reds')">Show reds only</button>
+    <button class="btn" id="fAll" onclick="setFilter('all')">Show all</button>
+  </div>
+</div>
+
+<div class="done-banner" id="doneBanner">✓ All reds cleared — this week is ready to invoice.</div>
+
+<table>
+  <thead>
+    <tr><th></th><th>Compañia</th><th>Date</th><th>Ticket#</th><th>Truck#</th><th>Origen</th><th>Destino</th><th>Tns/Lds/Hrs</th><th>Price</th><th>Total</th><th>Status / Action</th></tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<div class="foot">
+  <div class="note" id="footNote">You only touch the red rows. The other 239 are done. Clear the reds, then generate both invoice sides in one click.</div>
+  <button class="btn primary" id="genBtn" disabled onclick="generate()">Generate Week 15 invoices →</button>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const reds = [
+  {id:'r1', co:'RANGER', date:'04-06', tk:'—', truck:'8356', o:'Austin Conv.', d:'Tesla Project', q:'1.0', price:'?', total:'?',
+   flag:'2 rates on file: $117.80 / $124.00', label:'Pick price',
+   modal:{title:'Which rate applies?', desc:'This route carries two known rates this week. Pick the one on the ticket.',
+     choices:[['$117.80 (base rate)','$117.80','$117.80'],['$124.00 (Tesla premium)','$124.00','$124.00']]}},
+  {id:'r2', co:'STATEWIDE', date:'04-10', tk:'25120211', truck:'3310', o:'MMG', d:'San Marcos', q:'21.91', price:'$6.37', total:'$139.57',
+   flag:'duplicate load (same ticket, same haul)', label:'Review',
+   modal:{title:'Duplicate load', desc:'This exact haul (same date, truck, tons) is already in the ledger. Keep one, drop the copy?',
+     choices:[['Keep one — drop the duplicate','—','—'],['These are both real — keep both','$6.37','$139.57']]}},
+  {id:'r3', co:'MELENDREZ', date:'04-08', tk:'29837', truck:'1014', o:'Pump Station', d:'Dog Head', q:'1.0', price:'$55.00', total:'$55.00',
+   flag:'ticket# reused — 2 real loads', label:'Confirm both', amber:true,
+   modal:{title:'Same ticket #, two real loads', desc:'Ticket 29837 appears on two different trucks/days. Confirm both are real hauls?',
+     choices:[['Yes — both are real, keep both','$55.00','$55.00'],['No — one is a mistake, drop it','$55.00','$55.00']]}},
+  {id:'r4', co:'RANGER', date:'04-08', tk:'3866853', truck:'6121', o:'Pilot Knob', d:'DVISD', q:'1.0', price:'$124.00', total:'$117.80',
+   flag:'math: 1.0 × $124 ≠ $117.80', label:'Fix',
+   modal:{title:'Numbers don’t foot', desc:'Tons × price should equal the total. Which is right?',
+     choices:[['Price is $117.80 (total is right)','$117.80','$117.80'],['Total is $124.00 (price is right)','$124.00','$124.00']]}},
+  {id:'r5', co:'ROCK RIDGE', date:'04-09', tk:'3442084', truck:'3086', o:'Colorado Mat.', d:'Space X', q:'?', price:'$9.92', total:'?',
+   flag:'blurry — check tons', label:'Open photo',
+   modal:{title:'Confirm the tons', desc:'OCR wasn’t sure on the quantity. From the photo it reads 23.44 — confirm?',
+     choices:[['Yes — 23.44 tons','23.44','$232.53'],['Type a different number…','23.44','$232.53']]}},
+  {id:'r6', co:'AGGREGATE', date:'04-07', tk:'21349', truck:'833', o:'BC Mat. Finley', d:'Enzo Abilene', q:'24.25', price:'$16.00', total:'$388.00',
+   flag:'no stamp detected', label:'Open photo',
+   modal:{title:'Delivery stamp', desc:'No stamp/signature detected on the photo. Is the delivery proof there?',
+     choices:[['Yes — stamp is present','$16.00','$388.00'],['No stamp — hold this ticket','$16.00','$388.00']]}},
+  {id:'r7', co:'STATEWIDE', date:'04-09', tk:'1671458', truck:'6124', o:'IH 35/55968', d:'IH 35', q:'8.0', price:'$85.00', total:'$680.00',
+   flag:'2 drivers, same ticket', label:'Assign',
+   modal:{title:'Who hauled this?', desc:'Two driver IDs are attached to ticket 1671458. Assign the right one.',
+     choices:[['NQ94 — Naranjo','$85.00','$680.00'],['SK68 — Miguel Gonzalez','$85.00','$680.00']]}},
+  {id:'r8', co:'TEX-MEX', date:'04-10', tk:'3443980', truck:'6121', o:'Colorado Mat.', d:'Mustang Ridge', q:'23.21', price:'?', total:'?',
+   flag:'no rate on file for route', label:'Set rate',
+   modal:{title:'Set the rate for this route', desc:'No rate on file for Colorado Mat. → Mustang Ridge. Set it (remembered for next time).',
+     choices:[['$6.17 / ton (matches similar route)','$6.17','$143.21'],['Type a different rate…','$6.17','$143.21']]}},
+];
+const greens = [
+  ['AGGREGATE','04-06','21181','835','BC Mat. Finley','Enzo Abilene','25.47','$16.00','$407.52'],
+  ['RANGER','04-06','4581007','205','Centex','Johnson','27.24','$4.18','$113.86'],
+  ['MELENDREZ','04-07','30112','1313','Pump Station','Dog Head','1.0','$55.00','$55.00'],
+  ['STATEWIDE','04-09','23643855','6121','MMH','San Marcos','22.83','$3.48','$79.45'],
+  ['AGGREGATE','04-07','21369','835','BC Mat. Finley','Enzo Abilene','25.46','$16.00','$407.36'],
+];
+let state = {}; reds.forEach(r=>state[r.id]='red');
+let filter='reds';
+
+function render(){
+  const tb=document.getElementById('rows'); tb.innerHTML='';
+  reds.forEach(r=>{
+    const cleared = state[r.id]==='green';
+    const tr=document.createElement('tr');
+    tr.className=(cleared?'green':'red')+((filter==='reds'&&cleared)?' hidden':'');
+    tr.innerHTML=`<td><span class="dot ${cleared?'g':'r'}"></span></td>
+      <td>${r.co}</td><td>${r.date}</td><td>${r.tk}</td><td>${r.truck}</td><td>${r.o}</td><td>${r.d}</td>
+      <td>${r.q}</td><td class="money">${r.price}</td><td class="money">${r.total}</td>
+      <td>${cleared?'<span class="ok">✓ resolved</span>':
+        `<span class="flag ${r.amber?'amber':''}">${r.flag}</span> <button class="fix" onclick="openFix('${r.id}')">${r.label}</button>`}</td>`;
+    tb.appendChild(tr);
+  });
+  greens.forEach(g=>{
+    const tr=document.createElement('tr');
+    tr.className='green'+(filter==='reds'?' hidden':'');
+    tr.innerHTML=`<td><span class="dot g"></span></td>`+g.map((c,i)=>`<td class="${i>=6?'money':''}">${c}</td>`).join('')+`<td class="ok">✓ clear</td>`;
+    tb.appendChild(tr);
+  });
+  const remaining=reds.filter(r=>state[r.id]==='red').length;
+  document.getElementById('redCount').textContent=remaining;
+  document.getElementById('greenCount').textContent=247-remaining;
+  document.getElementById('genBtn').disabled = remaining>0;
+  document.getElementById('doneBanner').style.display = remaining===0?'block':'none';
+  document.getElementById('footNote').textContent = remaining>0
+    ? `You only touch the red rows. ${remaining} left. Clear them, then generate both invoice sides in one click.`
+    : `Every red is cleared. Hit generate — broker invoices (by company) and bilingual driver invoices print together.`;
+}
+function setFilter(f){filter=f;
+  document.getElementById('fReds').classList.toggle('active',f==='reds');
+  document.getElementById('fAll').classList.toggle('active',f==='all');render();}
+function openFix(id){
+  const r=reds.find(x=>x.id===id); const m=r.modal;
+  const el=document.getElementById('modal');
+  el.innerHTML=`<h3>${m.title}</h3><p>${m.desc}</p>`+
+    m.choices.map((c,i)=>`<button class="choice" onclick="resolve('${id}',${i})">${c[0]}</button>`).join('')+
+    `<button class="cancel" onclick="closeModal()">Cancel</button>`;
+  document.getElementById('overlay').classList.add('show');
+}
+function resolve(id,i){
+  const r=reds.find(x=>x.id===id); const c=r.modal.choices[i];
+  r.price=c[1]; r.total=c[2]; state[id]='green';
+  closeModal(); render(); toast('✓ '+r.co+' '+ (r.tk!=='—'?('#'+r.tk):'') +' resolved');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+function generate(){
+  document.getElementById('modal').innerHTML=`<h3>Invoices generated ✓</h3>
+    <p>Week 15 is done. Both directions were created from the one ledger:</p>
+    <button class="choice">📄 10 broker invoices (Ranger, Statewide, Melendrez…) — Ranger pre-flight passed</button>
+    <button class="choice">📄 47 driver invoices (bilingual, 5% QuickPay shave applied)</button>
+    <p style="margin-top:14px">Your 11 PM night just became 20 minutes.</p>
+    <button class="cancel" onclick="closeModal()">Close</button>`;
+  document.getElementById('overlay').classList.add('show');
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal()});
+render();
+</script>
+</body>
+</html>
