@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RCS — Check Screen (concept)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#242832; --ink:#e8ebf0;
+    --mut:#8b929f; --green:#1f9d55; --greenbg:#12251a; --red:#e0533d; --redbg:#2a1512;
+    --amber:#d9a441; --amberbg:#2a2312; --blue:#3d7be0;
+  }
+  *{box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px}
+  header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--panel)}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  header .wk{color:var(--mut);font-size:13px;margin-left:10px;font-weight:400}
+  .bar{display:flex;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:120px}
+  .stat .n{font-size:22px;font-weight:700}
+  .stat .l{color:var(--mut);font-size:12px;margin-top:2px}
+  .stat.green .n{color:var(--green)} .stat.red .n{color:var(--red)}
+  .filters{margin-left:auto;display:flex;gap:8px}
+  .btn{background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+  .btn.active{border-color:var(--blue);color:#cfe0ff}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;background:var(--bg)}
+  tr.green{background:var(--greenbg)}
+  tr.red{background:var(--redbg)}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .dot.g{background:var(--green)} .dot.r{background:var(--red)}
+  .flag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--redbg);color:var(--red);border:1px solid #4a2018;margin-left:4px}
+  .flag.amber{background:var(--amberbg);color:var(--amber);border-color:#4a3d18}
+  .money{font-variant-numeric:tabular-nums}
+  .fix{background:var(--blue);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+  .ok{color:var(--mut);font-size:12px}
+  .foot{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);background:var(--panel)}
+  .foot .note{color:var(--mut);font-size:13px;max-width:60%}
+  .badge{font-size:11px;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>RCS Tickets <span class="wk">Week 15 · 2026</span></h1></div>
+  <div class="badge">Concept mockup — real Week 15 sample rows</div>
+</header>
+
+<div class="bar">
+  <div class="stat"><div class="n">247</div><div class="l">tickets captured</div></div>
+  <div class="stat green"><div class="n">239</div><div class="l">🟢 clear — no action</div></div>
+  <div class="stat red"><div class="n">8</div><div class="l">🔴 need a check</div></div>
+  <div class="stat"><div class="n money">$22,140</div><div class="l">week spread (profit)</div></div>
+  <div class="filters">
+    <button class="btn active">Show reds only</button>
+    <button class="btn">Show all</button>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr><th></th><th>Compañia</th><th>Date</th><th>Ticket#</th><th>Truck#</th><th>Origen</th><th>Destino</th><th>Tns/Lds/Hrs</th><th>Price</th><th>Total</th><th>Status / Action</th></tr>
+  </thead>
+  <tbody>
+    <!-- REDS first: the only rows they touch -->
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>RANGER</td><td>04-06</td><td>—</td><td>8356</td><td>Austin Conv.</td><td>Tesla Project</td><td>1.0</td>
+      <td class="money">?</td><td class="money">?</td>
+      <td><span class="flag">2 rates on file: $117.80 / $124.00</span><button class="fix">Pick price</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>STATEWIDE</td><td>04-10</td><td>25120211</td><td>3310</td><td>MMG</td><td>San Marcos</td><td>21.91</td>
+      <td class="money">$6.37</td><td class="money">$139.57</td>
+      <td><span class="flag">duplicate ticket# (same load)</span><button class="fix">Review</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>MELENDREZ</td><td>04-08</td><td>29837</td><td>1014</td><td>Pump Station</td><td>Dog Head</td><td>1.0</td>
+      <td class="money">$55.00</td><td class="money">$55.00</td>
+      <td><span class="flag amber">ticket# reused — 2 real loads</span><button class="fix">Confirm both</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>RANGER</td><td>04-08</td><td>3866853</td><td>6121</td><td>Pilot Knob</td><td>DVISD</td><td>1.0</td>
+      <td class="money">$124.00</td><td class="money">$117.80</td>
+      <td><span class="flag">math: 1.0 × 124 ≠ 117.80</span><button class="fix">Fix</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>ROCK RIDGE</td><td>04-09</td><td>3442---</td><td>3086</td><td>Colorado Mat.</td><td>Space X</td><td>—</td>
+      <td class="money">$9.92</td><td class="money">?</td>
+      <td><span class="flag">blurry — check tons</span><button class="fix">Open photo</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>AGGREGATE</td><td>04-07</td><td>21349</td><td>833</td><td>BC Mat. Finley</td><td>Enzo Abilene</td><td>24.25</td>
+      <td class="money">$16.00</td><td class="money">$388.00</td>
+      <td><span class="flag">no stamp detected</span><button class="fix">Open photo</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>STATEWIDE</td><td>04-09</td><td>1671458</td><td>6124</td><td>IH 35/55968</td><td>IH 35</td><td>8.0</td>
+      <td class="money">$85.00</td><td class="money">$680.00</td>
+      <td><span class="flag">2 drivers, same ticket</span><button class="fix">Assign</button></td>
+    </tr>
+    <tr class="red">
+      <td><span class="dot r"></span></td><td>TEX-MEX</td><td>04-10</td><td>3443980</td><td>6121</td><td>Colorado Mat.</td><td>Mustang Ridge</td><td>23.21</td>
+      <td class="money">?</td><td class="money">?</td>
+      <td><span class="flag">no rate on file for route</span><button class="fix">Set rate</button></td>
+    </tr>
+    <!-- GREENS: glance and move on -->
+    <tr class="green"><td><span class="dot g"></span></td><td>AGGREGATE</td><td>04-06</td><td>21181</td><td>835</td><td>BC Mat. Finley</td><td>Enzo Abilene</td><td>25.47</td><td class="money">$16.00</td><td class="money">$407.52</td><td class="ok">✓ clear</td></tr>
+    <tr class="green"><td><span class="dot g"></span></td><td>RANGER</td><td>04-06</td><td>4581007</td><td>205</td><td>Centex</td><td>Johnson</td><td>27.24</td><td class="money">$4.18</td><td class="money">$113.86</td><td class="ok">✓ clear</td></tr>
+    <tr class="green"><td><span class="dot g"></span></td><td>MELENDREZ</td><td>04-07</td><td>30112</td><td>1313</td><td>Pump Station</td><td>Dog Head</td><td>1.0</td><td class="money">$55.00</td><td class="money">$55.00</td><td class="ok">✓ clear</td></tr>
+    <tr class="green"><td><span class="dot g"></span></td><td>STATEWIDE</td><td>04-09</td><td>23643855</td><td>6121</td><td>MMH</td><td>San Marcos</td><td>22.83</td><td class="money">$3.48</td><td class="money">$79.45</td><td class="ok">✓ clear</td></tr>
+    <tr class="green"><td><span class="dot g"></span></td><td>AGGREGATE</td><td>04-07</td><td>21369</td><td>835</td><td>BC Mat. Finley</td><td>Enzo Abilene</td><td>25.46</td><td class="money">$16.00</td><td class="money">$407.36</td><td class="ok">✓ clear</td></tr>
+  </tbody>
+</table>
+
+<div class="foot">
+  <div class="note">You only touch the 8 red rows. The other 239 are done. When every red is cleared, generate this week's broker + driver invoices in one click.</div>
+  <button class="btn primary">Generate Week 15 invoices →</button>
+</div>
+</body>
+</html>
