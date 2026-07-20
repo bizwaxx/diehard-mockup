@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Die Hard — Two UIs + Login</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#242832;--ink:#e8ebf0;--mut:#8b929f;
+    --green:#1f9d55;--greenbg:#12251a;--red:#e0533d;--redbg:#2a1512;--amber:#d9a441;--blue:#3d7be0;}
+  *{box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px}
+  .nav{display:flex;gap:8px;padding:12px 22px;background:#0b0d11;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+  .nav .brand{font-weight:700;margin-right:10px}
+  .nav button{background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px}
+  .nav button.active{border-color:var(--blue);color:#cfe0ff}
+  .nav .note{color:var(--mut);font-size:12px;margin-left:auto}
+  .stage{display:none}.stage.show{display:block}
+  h1.title{font-size:16px;margin:16px 22px 0}.sub{color:var(--mut);font-size:13px;margin:4px 22px 14px}
+
+  /* phone shell */
+  .phone-wrap{display:flex;justify-content:center;gap:40px;padding:24px 12px;flex-wrap:wrap}
+  .phone{width:320px;background:#000;border-radius:34px;padding:12px;border:2px solid #222}
+  .screen{background:var(--bg);border-radius:26px;overflow:hidden;min-height:580px;display:flex;flex-direction:column}
+  .cap{color:var(--mut);font-size:12px;text-align:center;margin-top:10px}
+
+  /* driver login (first save) */
+  .dlogin{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+  .dlogin h2{margin:0 0 6px}.dlogin p{color:var(--mut);font-size:13px;margin:0 0 20px}
+  .field{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:13px;border-radius:10px;margin-bottom:11px;font-size:15px}
+  .bigbtn{width:100%;background:var(--blue);border:none;color:#fff;padding:14px;border-radius:11px;font-size:16px;font-weight:600;cursor:pointer}
+  .bigbtn.green{background:var(--green)}
+
+  .drv-top{padding:16px 20px;border-bottom:1px solid var(--line)}
+  .drv-top h2{margin:0;font-size:16px}.drv-top p{margin:3px 0 0;color:var(--mut);font-size:12px}
+  .drv-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .cam{width:140px;height:140px;border-radius:50%;background:var(--blue);border:none;color:#fff;font-size:48px;cursor:pointer;box-shadow:0 8px 30px rgba(61,123,224,.4)}
+  .cam:active{transform:scale(.95)}
+  .cam-label{margin-top:18px;font-size:17px;font-weight:600}.cam-sub{color:var(--mut);font-size:13px;margin-top:6px;max-width:210px}
+  .drv-list{padding:12px 16px;border-top:1px solid var(--line)}.drv-list .h{color:var(--mut);font-size:11px;text-transform:uppercase;margin-bottom:8px}
+  .drv-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}.drv-item .chk{color:var(--green)}
+  .confirm{background:var(--greenbg);border:1px solid var(--green);color:#7fe0a6;padding:14px;border-radius:12px;font-size:15px}
+  .meta{font-size:11px;color:var(--mut);margin-top:8px;line-height:1.6}
+
+  /* company login */
+  .clogin{max-width:380px;margin:60px auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px;text-align:center}
+  .clogin .logo{font-size:30px;margin-bottom:4px}.clogin h2{margin:0 0 4px}.clogin p{color:var(--mut);font-size:13px;margin:0 0 20px}
+  .stay{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:13px;margin:6px 0 16px;justify-content:center}
+
+  /* company app (check screen mini) */
+  .bar{display:flex;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:100px}
+  .stat .n{font-size:20px;font-weight:700}.stat .l{color:var(--mut);font-size:12px}
+  .stat.green .n{color:var(--green)}.stat.red .n{color:var(--red)}
+  .who{margin-left:auto;color:var(--mut);font-size:13px}
+  table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:13px}
+  th{color:var(--mut);font-size:11px;text-transform:uppercase}
+  tr.green{background:var(--greenbg)}tr.red{background:var(--redbg)}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}.dot.g{background:var(--green)}.dot.r{background:var(--red)}
+  .flag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--redbg);color:var(--red);border:1px solid #4a2018}
+  .fix{background:var(--blue);border:none;color:#fff;padding:4px 11px;border-radius:6px;cursor:pointer;font-size:12px}
+  .ok{color:var(--mut);font-size:12px}.money{font-variant-numeric:tabular-nums}
+  .roles{display:flex;gap:14px;padding:0 22px 20px;flex-wrap:wrap}
+  .rolecard{flex:1;min-width:240px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .rolecard h3{margin:0 0 8px;font-size:15px}.rolecard ul{margin:0;padding-left:18px;color:var(--mut);font-size:13px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="brand">🚚 Die Hard</span>
+  <button id="n1" class="active" onclick="go(1)">📷 Driver app</button>
+  <button id="n2" onclick="go(2)">🏢 Company app</button>
+  <button id="n3" onclick="go(3)">Roles / who sees what</button>
+  <span class="note">2 UIs · driver auto-registers on 1st save · company signs in once</span>
+</div>
+
+<!-- DRIVER -->
+<div class="stage show" id="stage1">
+  <h1 class="title">Driver app — no password, ever.</h1>
+  <p class="sub">First time he saves a ticket, his phone registers him. After that, opening the app IS his login.</p>
+  <div class="phone-wrap"><div class="phone"><div class="screen" id="drvScreen">
+    <!-- first-run registration -->
+    <div class="dlogin" id="dReg">
+      <h2>Welcome</h2><p>Enter your name & truck once. That's it — no password.</p>
+      <input class="field" id="dName" placeholder="Your name (e.g. Miguel Gonzalez)" value="Miguel Gonzalez">
+      <input class="field" id="dTruck" placeholder="Truck # (e.g. 3086)" value="3086">
+      <button class="bigbtn" onclick="regDriver()">Save & start</button>
+      <div class="cap">Your first saved photo links this phone to you.</div>
+    </div>
+  </div></div></div>
+</div>
+
+<!-- COMPANY -->
+<div class="stage" id="stage2">
+  <div id="cLoginWrap">
+    <div class="clogin">
+      <div class="logo">🚚</div><h2>Die Hard</h2><p>Company sign-in · Road Construction Supply</p>
+      <input class="field" placeholder="Email" value="office@rcs.com">
+      <input class="field" type="password" placeholder="Password" value="••••••••">
+      <div class="stay"><input type="checkbox" checked> Keep me signed in on this computer</div>
+      <button class="bigbtn green" onclick="companyIn()">Sign in</button>
+      <div class="cap">Miguelito + office share one company login. Sign in once; stays in.</div>
+    </div>
+  </div>
+  <div id="cApp" style="display:none">
+    <div class="bar">
+      <div class="stat"><div class="n">247</div><div class="l">captured</div></div>
+      <div class="stat green"><div class="n" id="gC">239</div><div class="l">🟢 clear</div></div>
+      <div class="stat red"><div class="n" id="rC">3</div><div class="l">🔴 check</div></div>
+      <div class="stat"><div class="n money">$22,140</div><div class="l">spread</div></div>
+      <div class="who">👤 RCS Office · <a href="#" onclick="companyOut();return false" style="color:var(--blue)">sign out</a></div>
+    </div>
+    <table><thead><tr><th></th><th>Compañia</th><th>Ticket#</th><th>Truck#</th><th>Driver</th><th>Destino</th><th>Tns</th><th>Total</th><th>Action</th></tr></thead><tbody id="cRows"></tbody></table>
+    <div style="padding:16px 22px;color:var(--mut);font-size:13px">Each row is attributed to a <b>driver</b> (who to pay) and a <b>broker</b> (who to bill) from capture — same ledger pays drivers and bills brokers.</div>
+  </div>
+</div>
+
+<!-- ROLES -->
+<div class="stage" id="stage3">
+  <h1 class="title">Two accounts. Separation = fraud-proofing.</h1>
+  <p class="sub">The driver submits evidence. The company approves the money. No one person can fake + price + approve + pay a ticket.</p>
+  <div class="roles">
+    <div class="rolecard"><h3>🏢 Company (Miguelito + office)</h3><ul>
+      <li>Upload / receive tickets</li><li>Work the check screen (resolve reds)</li>
+      <li>Set rates (the crown jewel)</li><li>Generate & send both invoice sides</li>
+      <li>See the money / spread</li><li>Sign in once, stays signed in</li></ul></div>
+    <div class="rolecard"><h3>📷 Driver</h3><ul>
+      <li>One tap: snap ticket → saved → tagged to him</li><li>See only his own loads / pay</li>
+      <li>No password — phone = identity after 1st save</li>
+      <li>Can't approve, can't see others, can't touch money</li></ul></div>
+    <div class="rolecard"><h3>🔮 Broker portal (later)</h3><ul>
+      <li>Brokers view their own invoices</li><li>Not in MVP — parked in roadmap</li></ul></div>
+  </div>
+</div>
+
+<script>
+function go(n){[1,2,3].forEach(i=>{document.getElementById('stage'+i).classList.toggle('show',i===n);document.getElementById('n'+i).classList.toggle('active',i===n)});window.scrollTo(0,0);}
+// driver register -> camera
+function regDriver(){
+  const name=document.getElementById('dName').value||'Driver', truck=document.getElementById('dTruck').value||'—';
+  document.getElementById('drvScreen').innerHTML=`
+    <div class="drv-top"><h2>Snap Ticket</h2><p>Truck ${truck} · ${name}</p></div>
+    <div class="drv-body" id="drvBody">
+      <button class="cam" onclick="snap('${truck}')">📷</button>
+      <div class="cam-label">Tap to snap ticket</div>
+      <div class="cam-sub">Registered ✓ — no password needed again.</div>
+    </div>
+    <div class="drv-list"><div class="h">Today's loads</div><div id="drvItems"></div></div>`;
+}
+let snaps=0;
+function snap(truck){snaps++;
+  const t=[['3442084','Colorado Mat → SpaceX','23.44'],['3442557','Colorado Mat → SpaceX','21.57']][(snaps-1)%2];
+  const body=document.getElementById('drvBody');
+  body.innerHTML=`<div class="confirm">✓ Got it — #${t[0]}<div class="meta">📍 SpaceX Bastrop · 🕒 ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}<br>🔒 fingerprint saved · tagged to you · sent to office</div></div>`;
+  const items=document.getElementById('drvItems');const d=document.createElement('div');d.className='drv-item';d.innerHTML=`<span class="chk">✓</span> #${t[0]} · ${t[1]} · ${t[2]}t`;items.insertBefore(d,items.firstChild);
+  setTimeout(()=>{body.innerHTML=`<button class="cam" onclick="snap('${truck}')">📷</button><div class="cam-label">Tap to snap ticket</div><div class="cam-sub">Registered ✓ — no password needed again.</div>`;},1800);
+}
+// company login
+function companyIn(){document.getElementById('cLoginWrap').style.display='none';document.getElementById('cApp').style.display='block';renderC();}
+function companyOut(){document.getElementById('cApp').style.display='none';document.getElementById('cLoginWrap').style.display='block';}
+const cReds=[
+ {id:'a',co:'RANGER',tk:'—',truck:'8356',drv:'CR48',d:'Tesla Project',q:'1.0',tot:'?',flag:'2 rates',label:'Pick'},
+ {id:'b',co:'MELENDREZ',tk:'29837',truck:'1014',drv:'?',d:'Dog Head',q:'1.0',tot:'$55',flag:'assign driver',label:'Assign'},
+ {id:'c',co:'TEX-MEX',tk:'3443980',truck:'6121',drv:'SK68',d:'Mustang Ridge',q:'23.21',tot:'?',flag:'no rate',label:'Set'},
+];
+const cGreens=[['AGGREGATE','21181','835','WF96','Enzo Abilene','25.47','$407.52'],
+ ['RANGER','4581007','205','DF87','Johnson','27.24','$113.86'],
+ ['STATEWIDE','23643855','6121','SK68','San Marcos','22.83','$79.45'],
+ ['MELENDREZ','30112','1313','UV40','Dog Head','1.0','$55.00']];
+let cState={};cReds.forEach(r=>cState[r.id]='red');
+function renderC(){const tb=document.getElementById('cRows');tb.innerHTML='';
+ cReds.forEach(r=>{const c=cState[r.id]==='green';const tr=document.createElement('tr');tr.className=c?'green':'red';
+   tr.innerHTML=`<td><span class="dot ${c?'g':'r'}"></span></td><td>${r.co}</td><td>${r.tk}</td><td>${r.truck}</td><td>${c?'SK68':r.drv}</td><td>${r.d}</td><td>${r.q}</td><td class="money">${r.tot}</td><td>${c?'<span class="ok">✓</span>':`<span class="flag">${r.flag}</span> <button class="fix" onclick="cFix('${r.id}')">${r.label}</button>`}</td>`;tb.appendChild(tr);});
+ cGreens.forEach(g=>{const tr=document.createElement('tr');tr.className='green';tr.innerHTML=`<td><span class="dot g"></span></td>`+g.map((x,i)=>`<td class="${i>=5?'money':''}">${x}</td>`).join('')+`<td class="ok">✓</td>`;tb.appendChild(tr);});
+ const rem=cReds.filter(r=>cState[r.id]==='red').length;document.getElementById('rC').textContent=rem;document.getElementById('gC').textContent=247-rem;}
+function cFix(id){const r=cReds.find(x=>x.id===id);r.tot='$139';cState[id]='green';renderC();}
+</script>
+</body>
+</html>
